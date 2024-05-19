@@ -1,0 +1,10 @@
+{
+    "name": "log-processor",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "main.mjs",
+    
+    "scripts": {
+        "start": "node src/main.mjs"
+    }
+}
