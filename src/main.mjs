@@ -7,7 +7,7 @@ try {
   const processor = new Processor(logData);
   processor.process();
   fs.writeFileSync(
-    'output/output.txt',
+    'output/output.json',
     JSON.stringify(processor.tiradas, null, 2),
     'utf8'
   );
