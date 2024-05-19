@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const patternSingleTirada = /1d20 \+ \d+ = (\d+) \+ \d+ = \d+/; // 1d20 + x = y + x = z --> y
 const patternDoubleTirada = /1d20 = (\d+) = \1/; // 1d20 = x = x --> x
-const patternMultipleTiradas = /1d20 (\d+) \d+/g; // 1d20 x x --> x. Si hay esta casuistica en un bloque, no contabilizar dos veces el mayor de ese bloque
+const patternMultipleTiradas = /1d20 (\d+) \d+/g; // 1d20 x x --> x.
 
 const inputPath = './test.txt';
 
@@ -15,7 +15,6 @@ try {
   console.error(err);
 }
 
-// TODO: La casuistica Single no debería contabilizar si viene precedida de una casuistica Multiple
 function processLog(log) {
   const tiradas = {};
   const lines = log
@@ -24,10 +23,18 @@ function processLog(log) {
     .filter((el) => el !== '');
   const isPlayerLine = (text) => text.includes('[');
 
+  const handleMatch = (player, match) => {
+    const result = parseInt(match[1], 10);
+    if (!tiradas[player]) tiradas[player] = {};
+    if (!tiradas[player][result]) tiradas[player][result] = 0;
+    tiradas[player][result]++;
+  };
+
   let i = 0;
   while (i < lines.length) {
     if (isPlayerLine(lines[i])) {
       const player = lines[i].split('] ')[1].trim();
+      let isMultipleCounted = false;
       i++;
       while (i < lines.length && lines[i].trim()) {
         const matchSingle = lines[i].match(patternSingleTirada);
@@ -35,28 +42,19 @@ function processLog(log) {
         const matchMultiple = [...lines[i].matchAll(patternMultipleTiradas)];
         if (isPlayerLine(lines[i])) break;
 
-        if (matchSingle) {
-          const result = parseInt(matchSingle[1], 10);
-          if (!tiradas[player]) tiradas[player] = {};
-          if (!tiradas[player][result]) tiradas[player][result] = 0;
-          tiradas[player][result]++;
+        if (matchSingle && !isMultipleCounted) {
+          handleMatch(player, matchSingle);
         } else if (matchDouble) {
-          const result = parseInt(matchDouble[1], 10);
-          if (!tiradas[player]) tiradas[player] = {};
-          if (!tiradas[player][result]) tiradas[player][result] = 0;
-          tiradas[player][result]++;
+          handleMatch(player, matchDouble);
         } else if (matchMultiple.length) {
+          isMultipleCounted = true;
           matchMultiple.forEach((match) => {
-            const result = parseInt(match[1], 10);
-            if (!tiradas[player]) tiradas[player] = {};
-            if (!tiradas[player][result]) tiradas[player][result] = 0;
-            tiradas[player][result]++;
+            handleMatch(player, match);
           });
         }
         i++;
       }
     }
-    // i++;
   }
   return tiradas;
 }
