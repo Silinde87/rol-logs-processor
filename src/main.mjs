@@ -2,7 +2,7 @@ import { Processor } from './processor.mjs';
 import fs from 'fs';
 
 try {
-  const inputPath = 'data/input.txt';
+  const inputPath = 'data/log.txt';
   const logData = fs.readFileSync(inputPath, 'utf8');
   const processor = new Processor(logData);
   processor.process();
@@ -12,8 +12,12 @@ try {
     'utf8'
   );
   printResults(processor.tiradas);
-} catch (err) {
-  console.error(err);
+} catch (error) {
+  if (error.message.includes('data/log.txt')) {
+    console.error('Error: input.txt file is missing at input folder');
+  } else {
+    console.error(error);
+  }
 }
 
 function printResults(results) {
